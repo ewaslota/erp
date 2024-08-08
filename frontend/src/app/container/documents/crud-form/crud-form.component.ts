@@ -1,19 +1,5 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  OnInit,
-  OnChanges,
-  SimpleChanges,
-  HostListener,
-} from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, HostListener } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DocumentEntity } from '../document-entity.model';
 
@@ -34,6 +20,7 @@ export class CrudFormComponent implements OnInit, OnChanges {
   @Output() delete = new EventEmitter<DocumentEntity>();
 
   form: FormGroup;
+  selectedFile: File | null = null;
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
@@ -52,10 +39,7 @@ export class CrudFormComponent implements OnInit, OnChanges {
       this.initializeForm();
     }
     if (changes['errorMessage'] && changes['errorMessage'].currentValue) {
-      console.log(
-        'Received Error Message:',
-        changes['errorMessage'].currentValue
-      );
+      console.log('Received Error Message:', changes['errorMessage'].currentValue);
     }
   }
 
@@ -91,6 +75,13 @@ export class CrudFormComponent implements OnInit, OnChanges {
     this.close.emit();
   }
 
+  onFileSelected(event: Event) {
+    const fileInput = event.target as HTMLInputElement;
+    if (fileInput.files && fileInput.files.length > 0) {
+      this.selectedFile = fileInput.files[0];
+    }
+  }
+
   onSubmit() {
     if (this.mode === 'delete' && this.document) {
       this.deleteDocument(this.document);
@@ -102,6 +93,11 @@ export class CrudFormComponent implements OnInit, OnChanges {
       const documentToSave = {
         ...formValue,
       };
+
+      if (this.selectedFile) {
+        documentToSave['file'] = this.selectedFile;
+      }
+
       this.save.emit(documentToSave);
     } else {
       this.form.markAllAsTouched();

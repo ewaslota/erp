@@ -48,6 +48,15 @@
               class="form-control"
             ></textarea>
           </div>
+          <div class="form-group">
+            <label for="file">Upload File</label>
+            <input
+              type="file"
+              id="file"
+              (change)="onFileSelected($event)"
+              class="form-control"
+            />
+          </div>
         </form>
         <div *ngIf="mode === 'delete'" class="alert alert-warning">
           Are you sure you want to delete the document titled
