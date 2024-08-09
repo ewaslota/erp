@@ -8,7 +8,6 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "documents")
-
 public class DocumentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +20,15 @@ public class DocumentEntity {
     @Column(nullable = true, length = 1000)
     private String description;
 
+    @Column(nullable = true, length = 255)
+    private String fileName;
+
+    @Column(nullable = true, length = 255)
+    private String fileType;
+
+    @Column(nullable = true)
+    private Long fileSize;
+
     @CreationTimestamp
     @Column(nullable = false, columnDefinition = "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP")
     private Instant createdAt;
@@ -31,15 +39,6 @@ public class DocumentEntity {
 
     public Long getId() {
         return id;
-    }
-
-    public DocumentEntity(String title, String description) {
-        this.title = title;
-        this.description = description;
-    }
-
-    public DocumentEntity() {
-
     }
 
     public void setId(Long id) {
@@ -62,6 +61,30 @@ public class DocumentEntity {
         this.description = description;
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public String getFileType() {
+        return fileType;
+    }
+
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
+    }
+
+    public Long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -76,5 +99,14 @@ public class DocumentEntity {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public DocumentEntity(String title, String description) {
+        this.title = title;
+        this.description = description;
+    }
+
+    public DocumentEntity() {
+
     }
 }

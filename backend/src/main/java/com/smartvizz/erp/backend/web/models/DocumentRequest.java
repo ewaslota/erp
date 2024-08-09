@@ -9,6 +9,12 @@ public record DocumentRequest(
         String title,
 
         @Size(max = 1000, message = "Description must be up to 1000 characters")
-        String description
+        String description,
+
+        String fileName,
+
+        String fileType,
+        
+        Long fileSize
 ) {
 }
