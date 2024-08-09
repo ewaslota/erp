@@ -12,3 +12,12 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:common/db/migration
+  # Configuration for file storage
+  web:
+    resources:
+      static-locations: classpath:/static/, file:./uploads/
+  # Maximum file upload size
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB

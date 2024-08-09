@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -40,15 +41,22 @@ public class DocumentController {
     }
 
     @PostMapping
-    public ResponseEntity<DocumentResponse> create(@Valid @RequestBody DocumentRequest request) {
-        DocumentResponse createdDocument = documentService.create(request);
+    public ResponseEntity<DocumentResponse> create(
+            @Valid @RequestPart DocumentRequest request,
+            @RequestPart(required = false) MultipartFile file
+    ) {
+        DocumentResponse createdDocument = documentService.create(request, file);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDocument);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<DocumentResponse> update(@PathVariable Long id, @Valid @RequestBody DocumentRequest request) {
-        DocumentResponse updatedDocument = documentService.update(id, request);
+    public ResponseEntity<DocumentResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestPart DocumentRequest request,
+            @RequestPart(required = false) MultipartFile file
+    ) {
+        DocumentResponse updatedDocument = documentService.update(id, request, file);
 
         return ResponseEntity.ok(updatedDocument);
     }
@@ -60,4 +68,3 @@ public class DocumentController {
         return ResponseEntity.noContent().build();
     }
 }
-

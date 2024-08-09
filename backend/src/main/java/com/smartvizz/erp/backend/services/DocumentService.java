@@ -12,7 +12,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -20,9 +25,17 @@ import java.util.Arrays;
 public class DocumentService {
     private final DocumentRepository documentRepository;
     private static final Logger logger = LoggerFactory.getLogger(DocumentService.class);
+    private final Path fileStorageLocation;
 
     public DocumentService(DocumentRepository documentRepository) {
         this.documentRepository = documentRepository;
+        this.fileStorageLocation = Paths.get("uploaded-files").toAbsolutePath().normalize();
+
+        try {
+            Files.createDirectories(fileStorageLocation);
+        } catch (IOException ex) {
+            throw new RuntimeException("Could not create the directory where the uploaded files will be stored.", ex);
+        }
     }
 
     public Page<DocumentResponse> fetchAll(
@@ -36,13 +49,11 @@ public class DocumentService {
         ArrayList<Sort.Order> sortOrders = new ArrayList<>();
 
         for (int i = 0; i < sortColumns.length; i++) {
-
             String sortColumn = sortColumns[i];
             Sort.Direction sortDirection =
                     sortDirections.length > i && sortDirections[i].equalsIgnoreCase("desc")
                             ? Sort.Direction.DESC
                             : Sort.Direction.ASC;
-
 
             sortOrders.add(new Sort.Order(sortDirection, sortColumn));
         }
@@ -54,29 +65,60 @@ public class DocumentService {
     }
 
     public DocumentResponse fetchOne(Long id) {
-             return documentRepository.findById(id)
-                     .map(DocumentResponse::new)
-                     .orElseThrow(NotFoundException::new);
-         }
+        return documentRepository.findById(id)
+                .map(DocumentResponse::new)
+                .orElseThrow(NotFoundException::new);
+    }
 
-
-    public DocumentResponse create(DocumentRequest request) {
+    public DocumentResponse create(DocumentRequest request, MultipartFile file) {
         DocumentEntity documentEntity = new DocumentEntity(request.title(), request.description());
+        if (file != null && !file.isEmpty()) {
+            try {
+                String fileName = file.getOriginalFilename();
+                String fileType = file.getContentType();
+                Long fileSize = file.getSize();
+
+                documentEntity.setFileName(fileName);
+                documentEntity.setFileType(fileType);
+                documentEntity.setFileSize(fileSize);
+
+                Path targetLocation = fileStorageLocation.resolve(fileName);
+                Files.copy(file.getInputStream(), targetLocation);
+            } catch (IOException ex) {
+                throw new RuntimeException("Could not store file " + file.getOriginalFilename() + ". Please try again!", ex);
+            }
+        }
         DocumentEntity savedDocument = documentRepository.save(documentEntity);
 
         return new DocumentResponse(savedDocument);
     }
 
-    public DocumentResponse update(Long id, DocumentRequest request) {
+    public DocumentResponse update(Long id, DocumentRequest request, MultipartFile file) {
         DocumentEntity documentEntity = documentRepository.getReferenceById(id);
         documentEntity.setTitle(request.title());
         documentEntity.setDescription(request.description());
+
+        if (file != null && !file.isEmpty()) {
+            try {
+                String fileName = file.getOriginalFilename();
+                String fileType = file.getContentType();
+                Long fileSize = file.getSize();
+
+                documentEntity.setFileName(fileName);
+                documentEntity.setFileType(fileType);
+                documentEntity.setFileSize(fileSize);
+
+                Path targetLocation = fileStorageLocation.resolve(fileName);
+                Files.copy(file.getInputStream(), targetLocation);
+            } catch (IOException ex) {
+                throw new RuntimeException("Could not store file " + file.getOriginalFilename() + ". Please try again!", ex);
+            }
+        }
 
         DocumentEntity updatedDocument = documentRepository.save(documentEntity);
 
         return new DocumentResponse(updatedDocument);
     }
-
 
     public void delete(Long id) {
         documentRepository.deleteById(id);
