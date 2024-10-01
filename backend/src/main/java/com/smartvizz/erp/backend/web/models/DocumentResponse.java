@@ -38,4 +38,5 @@ public record DocumentResponse (
                 entity.getUpdatedAt()
         );
     }
+
 }

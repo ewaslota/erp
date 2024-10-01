@@ -5,12 +5,21 @@ import com.smartvizz.erp.backend.web.models.DocumentRequest;
 import com.smartvizz.erp.backend.web.models.DocumentResponse;
 import com.smartvizz.erp.backend.web.models.PageDTO;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 
 @RestController
 @RequestMapping("/api/documents")
@@ -23,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private static final Logger logger = LoggerFactory.getLogger(DocumentController.class);
 
     public DocumentController(DocumentService documentService) {
         this.documentService = documentService;
@@ -55,6 +65,38 @@ public class DocumentController {
         DocumentResponse document = documentService.fetchOne(id, user);
 
         return ResponseEntity.ok(document);
+    }
+
+    @GetMapping("{id}/download")
+    public ResponseEntity<Resource> downloadFile(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        try {
+            DocumentResponse document = documentService.fetchOne(id, user);
+
+            if (document.filePath() == null || document.fileType() == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String filePathString = document.filePath();
+            Path filePath = Paths.get(filePathString);
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists() || resource.isReadable()) {
+                String mimeType = document.fileType();
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(mimeType))
+                        .header(
+                                HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + resource.getFilename() + "\""
+                        )
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            logger.debug(e.toString());
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @PostMapping(consumes = {"multipart/form-data"})

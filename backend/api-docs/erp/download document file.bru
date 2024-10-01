@@ -1,0 +1,15 @@
+meta {
+  name: download document file
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/documents/1/download
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
