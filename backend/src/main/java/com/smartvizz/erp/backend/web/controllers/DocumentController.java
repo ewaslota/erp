@@ -94,7 +94,6 @@ public class DocumentController {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            logger.debug(e.toString());
             return ResponseEntity.status(500).build();
         }
     }
